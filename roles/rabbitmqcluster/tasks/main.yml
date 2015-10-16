@@ -1,0 +1,70 @@
+---
+# This role will install RabbitMQ and config RabbitMQ User
+
+- name: Install RabbitMQ
+  yum: name=rabbitmq-server state=present
+
+- name: create rabbitmq-server.service.d dir
+  file: name=/etc/systemd/system/rabbitmq-server.service.d state=directory owner=root group=root mode=755
+
+- name: create limits.conf
+  copy: src=etc/systemd/system/rabbitmq-server.service.d/limits.conf dest=/etc/systemd/system/rabbitmq-server.service.d/limits.conf owner=root group=root mode=644
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Modify RabbitMQ configure
+  copy: src=etc/rabbitmq/rabbitmq.config dest=/etc/rabbitmq/rabbitmq.config owner=rabbitmq group=rabbitmq mode=0644
+
+- name: Modify erlang.cookie
+  copy: src=var/lib/rabbitmq/erlang.cookie dest=/var/lib/rabbitmq/.erlang.cookie owner=rabbitmq group=rabbitmq mode=0400
+
+- name: rm -rf /var/lib/rabbitmq/mnesia/
+  shell: rm -rf /var/lib/rabbitmq/mnesia/*
+
+- name: restart RabbitMQ
+  service: name=rabbitmq-server state=restarted enabled=true
+  ignore_errors: True
+  register: result
+
+- name: restart RabbitMQ again when start fail
+  service: name=rabbitmq-server state=restarted enabled=true
+  when: result|failed
+
+- name: wait for rabbit to start
+  wait_for: port=5672 delay=2
+
+- name: Enables the rabbitmq_management plugin
+  rabbitmq_plugin: names=rabbitmq_management state=enabled prefix="/usr/lib/rabbitmq/lib/rabbitmq_server-3.3.5"
+
+- name: restart RabbitMQ
+  service: name=rabbitmq-server state=restarted enabled=true
+
+- name: wait for rabbit to start
+  wait_for: port=5672 delay=2
+
+- name: Stop rabbitmq app
+  shell: rabbitmqctl stop_app
+
+- name: Reset rabbitmq app
+  shell: rabbitmqctl reset
+
+- name: Join rabbit cluster
+  shell: rabbitmqctl join_cluster "rabbit@{{ groups['controller'][0] }}"
+  ignore_errors: True
+
+- name: Start rabbitmq app
+  shell: rabbitmqctl start_app
+
+- name: Set rabbitmq HA mode
+  shell: rabbitmqctl set_policy ha-all "" '{"ha-mode":"all","ha-sync-mode":"automatic"}'
+
+- name: Configure RabbitMQ User
+  rabbitmq_user: user={{rabbitmq_user}}
+                 password={{rabbitmq_password}}
+                 vhost=/
+                 configure_priv=.*
+                 read_priv=.*
+                 write_priv=.*
+                 state=present
+

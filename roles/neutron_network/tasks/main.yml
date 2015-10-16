@@ -1,0 +1,87 @@
+---
+# This role is used to deploy and config L2/L3 on network node
+- name: Config sysctl net.ipv4.ip_forward
+  sysctl: name=net.ipv4.ip_forward value=1 state=present 
+
+- name: Config sysctl net.ipv4.conf.all.rp_filter
+  sysctl: name=net.ipv4.conf.all.rp_filter value=0 state=present 
+
+- name: Config sysctl net.ipv4.conf.default.rp_filter
+  sysctl: name=net.ipv4.conf.default.rp_filter value=0 state=present 
+
+- name: Install neutron package
+  yum: name={{ item }} state=present
+  with_items:
+   - haproxy
+   - openstack-neutron
+   - openstack-neutron-ml2
+   - openstack-neutron-openvswitch
+
+- name: Configure neutron config
+  template: src=etc/neutron/neutron.conf.j2 dest=/etc/neutron/neutron.conf owner=neutron group=neutron mode=0640
+  notify:
+    - restart neutron-openvswitch-agent
+    - restart neutron-dhcp-agent 
+    - restart neutron-l3-agent
+    - restart neutron-metadata-agent
+    - restart neutron-lbaas-agent
+
+- name: Configure ml2 config
+  template: src=etc/neutron/plugins/ml2/ml2_conf.ini.j2 dest=/etc/neutron/plugins/ml2/ml2_conf.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-openvswitch-agent
+
+- name: Create plugin.ini link
+  file: src=/etc/neutron/plugins/ml2/ml2_conf.ini dest=/etc/neutron/plugin.ini owner=neutron group=neutron state=link
+  notify: restart neutron-openvswitch-agent
+
+- name: Create openvswitch config
+  template: src=etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini.j2 dest=/etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-openvswitch-agent
+
+- name: Create DHCP agent config
+  template: src=etc/neutron/dhcp_agent.ini.j2 dest=/etc/neutron/dhcp_agent.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-dhcp-agent 
+
+- name: Create L3 agent config
+  template: src=etc/neutron/l3_agent.ini.j2 dest=/etc/neutron/l3_agent.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-l3-agent
+
+- name: Create Metadata agent config
+  template: src=etc/neutron/metadata_agent.ini.j2 dest=/etc/neutron/metadata_agent.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-metadata-agent
+
+- name: Create FWaaS config
+  template: src=etc/neutron/fwaas_driver.ini.j2 dest=/etc/neutron/fwaas_driver.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-l3-agent
+
+- name: Create LBaaS agent config
+  template: src=etc/neutron/lbaas_agent.ini.j2 dest=/etc/neutron/lbaas_agent.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-lbaas-agent
+
+- name: Start Openvswitch
+  service: name=openvswitch  state=started  enabled=yes
+
+- name: Create br-int
+  openvswitch_bridge: bridge=br-int state=present
+
+# TODO: Hard-Code br-eth1 here
+- name: Create br-eth1
+  openvswitch_bridge: bridge=br-eth1 state=present
+
+- name: Add eth1 into br-eth1
+  openvswitch_port: bridge=br-eth1 port=eth1 state=present
+
+- name: Start neutron-openvswitch-agent
+  service: name=neutron-openvswitch-agent  state=started  enabled=yes
+
+- name: Start neutron-l3-agent
+  service: name=neutron-l3-agent  state=started  enabled=yes
+
+- name: Start neutron-dhcp-agent
+  service: name=neutron-dhcp-agent  state=started  enabled=yes
+
+- name: Start neutron-metadata-agent
+  service: name=neutron-metadata-agent  state=started  enabled=yes
+
+- name: Start neutron-LBaaS-agent
+  service: name=neutron-lbaas-agent  state=started  enabled=yes

@@ -1,0 +1,142 @@
+# Hosts
+# ip is from 192.168.100.100 - 192.168.100.110
+# 192.168.100.100 is mysql vip
+controller1      ansible_ssh_host=192.168.100.101  ansible_connection=ssh  ansible_ssh_user=root
+controller2      ansible_ssh_host=192.168.100.102  ansible_connection=ssh  ansible_ssh_user=root
+controller3      ansible_ssh_host=192.168.100.103  ansible_connection=ssh  ansible_ssh_user=root
+compute1         ansible_ssh_host=192.168.100.104  ansible_connection=ssh  ansible_ssh_user=root
+compute2         ansible_ssh_host=192.168.100.105  ansible_connection=ssh  ansible_ssh_user=root
+network1         ansible_ssh_host=192.168.100.106  ansible_connection=ssh  ansible_ssh_user=root
+network2         ansible_ssh_host=192.168.100.107  ansible_connection=ssh  ansible_ssh_user=root
+haproxy          ansible_ssh_host=192.168.100.100  ansible_connection=ssh  ansible_ssh_user=root
+
+[all:vars]
+####################
+# Common
+####################
+
+# Domain Name
+domainname = qa.webex.com
+
+# DNS Name
+dnsname1 = 8.8.8.8
+dnsname2 = 127.0.0.1
+
+# NTP
+ntp_server = 192.168.100.110
+
+# ocp repo
+ocp_repo_path = etc/yum.repos.d/ocp_feli5.repo
+
+# log verbose
+verbose = True
+
+# log debug
+debug = True
+
+####################
+# MySQL
+####################
+db_root_password        = 123work
+mysql_vip               = haproxy.qa.webex.com
+mysql_vip_port          = 3306
+management_network      = 192.168.100.%
+
+############
+# RabbitMQ #
+############
+rabbitmq_vip                   = haproxy.qa.webex.com
+rabbitmq_vip_port              = 5672
+rabbit_ha_queues               = True
+rabbitmq_user                  = rabbituser
+rabbitmq_password              = rabbitpassword
+
+############
+# Keystone #
+############
+keystone_mysql_password        = keystonepassword
+keystone_admin_token           = 6ddbdc726d44d1ec146a
+keystone_admin_password        = admin
+keystone_admin_email           = feli5@cisco.com
+keystone_admin_url_vip         = haproxy.qa.webex.com
+keystone_admin_url_port        = 35357
+keystone_admin_url_protocol    = https
+keystone_service_url_vip       = haproxy.qa.webex.com
+keystone_service_url_port      = 5000
+keystone_service_url_protocol  = https
+
+############
+#  Glance  #
+############
+glance_mysql_password          = glancepassword
+glance_admin_password          = glance_service_password
+glance_admin_email             = feli5@cisco.com
+glance_service_url_vip         = haproxy.qa.webex.com
+glance_service_url_port        = 9292
+glance_service_url_protocol    = https
+glance_registry_url_vip        = haproxy.qa.webex.com
+glance_registry_url_port       = 9191
+glance_registry_url_protocol   = https
+glance_image_nfs               = 192.168.100.110:/vol/glance_images
+
+############
+#   Nova   #
+############
+nova_mysql_password            = novapassword
+nova_admin_password            = nova_service_password
+nova_admin_email               = feli5@cisco.com
+nova_service_url_vip           = haproxy.qa.webex.com
+nova_service_url_port          = 8774
+nova_service_url_protocol      = https
+nova_vnc_vip                   = haproxy.qa.webex.com
+nova_vnc_port                  = 6080
+nova_vnc_protocol              = https
+nova_metadata_ip               = 192.168.100.100
+nova_metadata_port             = 8775
+nova_instance_nfs              = 192.168.100.110:/vol/nova_instances
+# Modify this to kvm in phy
+virt_type                      = qemu 
+
+############
+#  Neutron #
+############
+neutron_mysql_password          = neutronpassword
+neutron_admin_password          = neutron_service_password
+neutron_admin_email             = feli5@cisco.com
+neutron_service_url_vip         = haproxy.qa.webex.com
+neutron_service_url_port        = 9696
+neutron_service_url_protocol    = https
+type_drivers                    = vlan
+tenant_network_types            = vlan
+network_vlan_ranges             = physnet1:500:599
+mechanism_drivers               = openvswitch
+enable_security_group           = True
+firewall_driver                 = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+l2_population                   = False
+interface_driver                = neutron.agent.linux.interface.OVSInterfaceDriver
+use_namespaces                  = True
+metadata_proxy_shared_secret    = ac0a3b82fe118c8cd169
+
+
+############
+#  Horizon #
+############
+# horizon_vip                     = 192.168.100.100
+horizon_vip                     = haproxy.qa.webex.com
+horizon_vport                   = 443
+ALLOWED_HOSTS                   = ['haproxy.qa.webex.com']
+
+[controller]
+controller1
+controller2
+controller3
+
+[network]
+network1
+network2
+
+[compute]
+compute1
+compute2
+
+[add]

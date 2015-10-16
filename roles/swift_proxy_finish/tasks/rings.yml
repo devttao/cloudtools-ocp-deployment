@@ -1,0 +1,24 @@
+---
+# rebalance rings
+
+- name: rebalance rings
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  command: swift-ring-builder {{ item }}.builder rebalance
+           chdir=/etc/swift 
+  register: rebalance
+  ignore_errors: true
+  with_items:
+    - account
+    - object
+    - container
+
+- name: distribute builders file with rsync
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  shell: rsync -av /etc/swift/*.builder {{ item }}::config
+  with_items: groups['swift_proxy_server'] + groups['swift_storage']
+
+- name: distribute rings with rsync
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  shell: rsync -av /etc/swift/*.ring.gz {{ item }}::config
+  with_items: groups['swift_proxy_server'] + groups['swift_storage']
+

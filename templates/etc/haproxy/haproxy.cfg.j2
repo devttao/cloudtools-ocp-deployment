@@ -1,0 +1,175 @@
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+        log             global
+        mode            http
+        option          httplog
+        option          dontlognull
+        retries         3
+        option          redispatch
+        maxconn         20000
+        contimeout      5000
+        clitimeout      100000
+        srvtimeout      100000
+
+#Haproxy Web
+listen stats 0.0.0.0:9000       #Listen on all IP's on port 9000
+    mode http
+    balance
+    timeout client 5000
+    timeout connect 4000
+    timeout server 30000
+
+    #This is the virtual URL to access the stats page
+    stats uri /haproxy
+
+    #Authentication realm. This can be set to anything. Escape space characters with a backslash.
+    stats realm HAProxy\ Statistics
+
+    #The user/pass you want to use. Change this password!
+    stats auth admin:admin
+
+    #This allows you to take down and bring up back end servers.
+    #This will produce an error on older versions of HAProxy.
+    stats admin if TRUE
+
+# RabbitMQ
+listen  rabbitmq {{ rabbitmq_vip }}:{{ rabbitmq_vip_port }}
+        option forwardfor
+        mode tcp
+        balance roundrobin
+{% for host in groups['controller'] %}
+{% if loop.index == 1 %}
+        server rabbitmq{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:5672 check port 5672 fall 2 inter 1000
+{% else %}
+        server rabbitmq{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:5672 check port 5672 backup fall 2 inter 1000
+{% endif %}
+{% endfor %}
+
+# Mysql
+listen  mysql {{ mysql_vip }}:{{ mysql_vip_port }}
+        option forwardfor
+        mode tcp
+        balance roundrobin
+{% for host in groups['controller'] %}
+{% if loop.index == 1 %}
+        server mysql{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:3306 check port 3306 fall 2 inter 1000
+{% else %}
+        server mysql{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:3306 check port 3306 backup fall 2 inter 1000
+{% endif %}
+{% endfor %}
+
+# horizon
+listen  horizon {{ horizon_vip }}:{{ horizon_vport }}
+        option forwardfor
+        option  httpchk
+        balance roundrobin
+        cookie  SERVERID insert indirect nocache
+{% for host in groups['controller'] %}
+        server horizon{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:80 check cookie horizon{{ loop.index }}
+{% endfor %}
+        capture cookie vgnvisitor= len 32
+
+# keystone api
+listen  keystoneapi {{ keystone_service_url_vip }}:{{ keystone_service_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server keystone{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:5000 check cookie keystone{{ loop.index }}
+{% endfor %}
+
+# keystone admin
+listen  keystoneadmin {{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server keystoneadmin{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:35357 check cookie keystoneadmin{{ loop.index }}
+{% endfor %}
+
+# glance api
+listen  glanceapi {{ glance_service_url_vip }}:{{ glance_service_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server glanceapi{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:9292 check cookie glanceapi{{ loop.index }}
+{% endfor %}
+
+# glance registry
+listen  glanceregistry {{ glance_registry_url_vip }}:{{ glance_registry_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server glanceregistry{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:9191 check cookie glanceregistry{{ loop.index }}
+{% endfor %}
+
+# nova api
+listen  novaapi {{ nova_service_url_vip }}:{{ nova_service_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server novapi{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:8774 check cookie novaapi{{ loop.index }}
+{% endfor %}
+
+# nova novnc
+listen  novanovnc {{ nova_vnc_vip }}:{{ nova_vnc_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server novanovnc{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:6080 check cookie novanovnc{{ loop.index }}
+{% endfor %}
+
+# neutron
+listen  neutron {{ neutron_service_url_vip }}:{{ neutron_service_url_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server neutron{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:9696 check cookie neutron{{ loop.index }}
+{% endfor %}
+
+# nova metadata
+listen  novametada {{ nova_metadata_ip }}:{{ nova_metadata_port }}
+        option forwardfor
+        cookie  SERVERID rewrite
+        balance roundrobin
+{% for host in groups['controller'] %}
+        server novametadata{{ loop.index }} {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}:8775 check cookie novametadata{{ loop.index }}
+{% endfor %}
+
+# swift api
+#frontend swift_frontend
+#	bind 10.224.159.114:443 ssl crt /home/matt/cert/webexcert/qa.crt
+#	mode http
+#	option httpclose
+#	option forwardfor
+#	reqadd X-Forwarded-Protocol:\ https
+#	default_backend swift_server
+
+#backend swift_server
+#	mode http
+#	balance roundrobin
+#	cookie SERVERID insert indirect nocache
+#	server swift1 10.224.159.83:8080 check cookie swift1
+#	server swift2 10.224.159.84:8080 check cookie swift2

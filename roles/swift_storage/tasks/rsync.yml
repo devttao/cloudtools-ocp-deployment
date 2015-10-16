@@ -1,0 +1,12 @@
+---
+
+- name: Install rsync package
+  yum: name=rsync state=present
+
+- name: Configure rsync 
+  template: src=etc/rsyncd.conf.j2 dest=/etc/rsyncd.conf mode=0644
+  notify:
+   - restart rsyncd
+
+- name: Start rsyncd
+  service: name=rsyncd  state=started  enabled=yes

@@ -1,0 +1,69 @@
+---
+# This role is used to deploy and config neutron-server on controller node
+
+- name: Create neutron DB
+  mysql_db: name=neutron state=present
+
+- name: Create neutron DB User
+  mysql_user: host={{ item }} name=neutron  password={{ neutron_mysql_password }} priv=neutron.*:ALL,GRANT state=present
+  with_items:
+    - "{{ mysql_vip }}"
+    - "{{ inventory_hostname }}"
+    - "{{ management_network }}"
+    - localhost
+
+- name: Install neutron package
+  yum: name={{ item }} state=present
+  with_items:
+   - openstack-neutron
+   - openstack-neutron-ml2
+   - python-neutronclient
+
+- name: create neutron user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: neutron
+    password: "{{ neutron_admin_password }}"
+    email: "{{ neutron_admin_email }}"
+    tenant: services
+    state: present
+
+- name: Associate role admin with neutron
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: neutron
+    tenant: services
+    role: admin
+    state: present
+
+- name: Create neutron endpoint
+  keystone_service:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    name: neutron
+    type: network
+    region: regionOne
+    description: "OpenStack Networking"
+    public_url: "{{ neutron_service_url_protocol }}://{{ neutron_service_url_vip }}:{{ neutron_service_url_port }}"
+    internal_url: "{{ neutron_service_url_protocol }}://{{ neutron_service_url_vip }}:{{ neutron_service_url_port }}"
+    admin_url: "{{ neutron_service_url_protocol }}://{{ neutron_service_url_vip }}:{{ neutron_service_url_port }}"
+
+- name: Configure neutron config
+  template: src=etc/neutron/neutron.conf.j2 dest=/etc/neutron/neutron.conf owner=neutron group=neutron mode=0640
+  notify: restart neutron-server
+
+- name: Configure ml2 config
+  template: src=etc/neutron/plugins/ml2/ml2_conf.ini.j2 dest=/etc/neutron/plugins/ml2/ml2_conf.ini owner=neutron group=neutron mode=0640
+  notify: restart neutron-server
+
+- name: Create plugin.ini link
+  file: src=/etc/neutron/plugins/ml2/ml2_conf.ini dest=/etc/neutron/plugin.ini owner=neutron group=neutron state=link
+  notify: restart neutron-server
+
+- name: Neutron db sync
+  shell: neutron-db-manage --config-file=/etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+
+- name: Start neutron-server
+  service: name=neutron-server  state=started  enabled=yes

@@ -1,0 +1,23 @@
+---
+# TODO: This role can be done in cobbler!!
+# This role contains common plays that will run on all nodes.
+
+- name: Remove all the repo
+  shell: rm -rf /etc/yum.repos.d/*.repo
+
+# TODO: use template to support different repo address
+- name: Create the ocp repository
+  copy: src={{ ocp_repo_path }} dest=/etc/yum.repos.d/ocp.repo
+
+- name: Clean up repo cache
+  shell: yum clean all 
+
+# Hostname
+- name: Config hostname
+  hostname: name={{ inventory_hostname }}.{{ domainname }}
+
+# Hosts
+- name: Build hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth0.ipv4.address }} {{ item }}.{{ domainname }} {{ item }}" state=present
+  when: hostvars[item].ansible_eth0.ipv4.address is defined
+  with_items: groups['all']

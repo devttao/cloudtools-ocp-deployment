@@ -1,0 +1,126 @@
+---
+- hosts: all
+  roles:
+  - common
+
+# Start All the Mysqld to sync data
+- hosts: controller
+  tasks:
+  - name: Copy .my.cnf file with root password credentials
+    template: src=templates/root/my.cnf  dest=/root/.my.cnf  owner=root  group=root  mode=0640
+
+- hosts: controller3
+  tasks:
+  - name: Stop Mysql Service
+    service: name=mariadb state=stopped enabled=true
+
+- hosts: controller2
+  tasks:
+  - name: Stop Mysql Service
+    service: name=mariadb state=stopped enabled=true
+
+- hosts: controller1
+  tasks:
+  - name: Stop Mysql Service
+    service: name=mariadb state=stopped enabled=true
+
+- hosts: controller1
+  roles:
+  - mysqlcluster_init
+  - rabbitmqcluster
+
+- hosts: controller2
+  roles:
+  - mysqlcluster_join
+  - rabbitmqcluster
+
+- hosts: controller3
+  roles:
+  - mysqlcluster_join
+  - rabbitmqcluster
+
+- hosts: controller1
+  roles:
+  - mysqlcluster_finish
+
+- hosts: controller2
+  roles:
+  - mysqlcluster_finish
+
+- hosts: controller3
+  roles:
+  - mysqlcluster_finish
+
+
+# Restart OCP service for re-connect RabbitMQ and Mysql Cluster
+- hosts: controller
+  tasks:
+  # pause 30 s
+  - pause: seconds=30
+
+  # Restart Glance
+  - name: restart openstack-glance-api
+    service: name=openstack-glance-api state=restarted
+
+  - name: restart openstack-glance-registry
+    service: name=openstack-glance-registry state=restarted
+
+  # Restart Keystone
+  - name: restart openstack-keystone
+    service: name=openstack-keystone state=restarted
+
+  # Restart Neutron
+  - name: restart neutron-server
+    service: name=neutron-server state=restarted
+
+  # Restart Nova
+  - name: restart openstack-nova-api
+    service: name=openstack-nova-api  state=restarted
+
+  - name: restart openstack-nova-cert
+    service: name=openstack-nova-cert  state=restarted
+
+  - name: restart openstack-nova-consoleauth
+    service: name=openstack-nova-consoleauth  state=restarted
+
+  - name: restart openstack-nova-scheduler
+    service: name=openstack-nova-scheduler  state=restarted
+
+  - name: restart openstack-nova-conductor
+    service: name=openstack-nova-conductor  state=restarted
+
+  - name: restart openstack-nova-novncproxy
+    service: name=openstack-nova-novncproxy  state=restarted
+
+- hosts: network
+  tasks:
+  - name: restart neutron-openvswitch-agent
+    service: name=neutron-openvswitch-agent state=restarted
+
+  - name: restart neutron-lbaas-agent
+    service: name=neutron-lbaas-agent state=restarted
+
+  - name: restart neutron-dhcp-agent
+    command: killall dnsmasq
+    ignore_errors: True
+
+  - name: restart dhcp agent
+    service: name=neutron-dhcp-agent  state=restarted
+
+  - name: restart neutron-metadata-agent
+    command: killall neutron-ns-metadata-proxy
+    ignore_errors: True
+
+  - name: restart metadata agent
+    service: name=neutron-metadata-agent  state=restarted
+
+  - name: restart neutron-l3-agent
+    service: name=neutron-l3-agent state=restarted
+
+- hosts: compute
+  tasks:
+  - name: restart openstack-nova-compute
+    service: name=openstack-nova-compute state=restarted
+
+  - name: restart neutron-openvswitch-agent
+    service: name=neutron-openvswitch-agent state=restarted

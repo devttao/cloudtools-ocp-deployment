@@ -1,0 +1,86 @@
+---
+# This role is used to deploy and config nova service on controller node
+
+- name: Create nova DB
+  mysql_db: name=nova state=present
+
+- name: Create nova DB User
+  mysql_user: host={{ item }} name=nova  password={{ nova_mysql_password }} priv=nova.*:ALL,GRANT state=present
+  with_items:
+    - "{{ mysql_vip }}"
+    - "{{ inventory_hostname }}"
+    - "{{ management_network }}"
+    - localhost
+
+- name: Install nova and nova client package
+  yum: name={{ item }} state=present
+  with_items:
+   - openstack-nova-api
+   - openstack-nova-cert
+   - openstack-nova-conductor
+   - openstack-nova-console
+   - openstack-nova-novncproxy
+   - openstack-nova-scheduler
+   - python-novaclient
+
+- name: Configure nova config
+  template: src=etc/nova/nova.conf.controller.j2 dest=/etc/nova/nova.conf owner=nova group=nova mode=0640
+  notify:
+   - restart openstack-nova-api
+   - restart openstack-nova-cert
+   - restart openstack-nova-consoleauth
+   - restart openstack-nova-scheduler
+   - restart openstack-nova-conductor
+   - restart openstack-nova-novncproxy
+
+- name: Nova DB sync
+  command: nova-manage db sync
+
+- name: create nova user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: nova
+    password: "{{ nova_admin_password }}"
+    email: "{{ nova_admin_email }}"
+    tenant: services
+    state: present
+
+- name: Associate role admin with nova
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: nova
+    tenant: services
+    role: admin
+    state: present
+
+- name: Create nova endpoint
+  keystone_service:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    name: nova
+    type: compute
+    region: regionOne
+    description: "OpenStack Compute"
+    public_url: "{{ nova_service_url_protocol }}://{{ nova_service_url_vip }}:{{ nova_service_url_port }}/v2/%(tenant_id)s"
+    internal_url: "{{ nova_service_url_protocol }}://{{ nova_service_url_vip }}:{{ nova_service_url_port }}/v2/%(tenant_id)s"
+    admin_url: "{{ nova_service_url_protocol }}://{{ nova_service_url_vip }}:{{ nova_service_url_port }}/v2/%(tenant_id)s"
+
+- name: Start nova-api
+  service: name=openstack-nova-api  state=started  enabled=yes
+
+- name: Start nova-cert
+  service: name=openstack-nova-cert  state=started  enabled=yes
+
+- name: Start nova-consoleauth
+  service: name=openstack-nova-consoleauth  state=started  enabled=yes
+
+- name: Start nova-scheduler
+  service: name=openstack-nova-scheduler  state=started  enabled=yes
+
+- name: Start nova-conductor
+  service: name=openstack-nova-conductor  state=started  enabled=yes
+
+- name: Start nova-novncproxy
+  service: name=openstack-nova-novncproxy  state=started  enabled=yes

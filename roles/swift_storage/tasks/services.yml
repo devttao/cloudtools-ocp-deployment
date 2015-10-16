@@ -1,0 +1,21 @@
+---
+# services
+
+- name: Start rsyncd
+  service: name=rsyncd  state=started  enabled=yes
+
+- name: start swift
+  service: name=openstack-swift-{{ item }} state=started  enabled=yes
+  with_items:
+  - account
+  - account-auditor
+  - account-reaper
+  - account-replicator
+  - container
+  - container-auditor
+  - container-replicator
+  - container-updater
+  - object
+  - object-auditor
+  - object-replicator
+  - object-updater

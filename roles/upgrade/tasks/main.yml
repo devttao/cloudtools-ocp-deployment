@@ -1,0 +1,17 @@
+---
+# This role contains common plays that will run on all nodes.
+- name: upgrade all packages
+  yum: name=* state=latest
+  register: ret
+
+# Centos 7 will shutdown stop system, to protect this, we need 1 min delay
+- name: restart machine
+  shell: shutdown -r 1
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: ret|changed
+
+- name: waiting for server to come back
+  local_action: wait_for host={{ ansible_eth0.ipv4.address }} port=22 timeout=300 delay=90 state=started
+  when: ret|changed

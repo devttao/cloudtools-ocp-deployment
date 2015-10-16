@@ -1,0 +1,32 @@
+ocpelk      ansible_ssh_host=10.224.243.38  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata     ansible_ssh_host=10.224.243.39  ansible_connection=ssh  ansible_ssh_user=centos
+controller3 ansible_ssh_host=10.224.251.243 ansible_connection=ssh  ansible_ssh_user=root
+
+
+[elasticsearch]
+ocpelk
+elkdata
+
+[logstash]
+ocpelk
+
+[kibana]
+ocpelk
+
+
+[all:vars]
+####################
+# Common
+####################
+
+# Domain Name
+domainname = qa.webex.com
+
+# DNS Name
+dnsname1 = 10.224.91.8
+dnsname2 = 10.224.30.4
+
+# NTP
+ntp_server = 10.224.241.129
+
+ocp_repo_path = etc/yum.repos.d/ocp_limao.repo

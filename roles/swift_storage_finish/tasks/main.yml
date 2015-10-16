@@ -1,0 +1,30 @@
+---
+- name: ensure /etc/swift permission
+  command: chown -R swift:swift /etc/swift
+  
+#- name: stop swift-storage node services
+#  command: swift-init all stop
+#  when: new_rings.changed
+#  ignore_errors: true
+
+#- name: restart swift-storage node services
+#  command: swift-init all start
+#  when: new_rings.changed
+#  ignore_errors: true
+
+- name: restart swift
+  service: name=openstack-swift-{{ item }} state=restarted 
+  with_items:
+  - account
+  - account-auditor
+  - account-reaper
+  - account-replicator
+  - container
+  - container-auditor
+  - container-replicator
+  - container-updater
+  - object
+  - object-auditor
+  - object-replicator
+  - object-updater
+

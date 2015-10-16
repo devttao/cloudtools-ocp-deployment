@@ -1,0 +1,8 @@
+---
+# This role is used to deploy and config swift service on controller node
+
+- include: packages.yml
+- include: endpoint.yml
+- include: files.yml
+- include: rsync.yml
+- include: create_rings.yml

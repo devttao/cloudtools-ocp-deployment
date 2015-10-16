@@ -1,0 +1,10 @@
+---
+# packages for storage node
+- name: Install swift package
+  yum: name={{ item }} state=present
+  with_items:
+   - openstack-swift-account
+   - openstack-swift-container
+   - openstack-swift-object
+   - xfsprogs
+   - rsync

@@ -1,0 +1,26 @@
+---
+- name: Install logstash
+  yum: name={{ item }} state=present
+  with_items:
+    - java-1.7.0-openjdk
+    - logstash-1.5.4-1
+
+- name: configure ssl cert
+  copy: src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'etc/pki/tls/private/logstash-forwarder.key.{{ domainname }}',  dest: '/etc/pki/tls/private/logstash-forwarder.key',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'etc/pki/tls/certs/logstash-forwarder.crt.{{ domainname }}',    dest: '/etc/pki/tls/certs/logstash-forwarder.crt',     group: 'root',  owner: 'root',   mode: '0644' }
+
+- name: Install logstash plugin
+  shell: /opt/logstash/bin/plugin install logstash-codec-netflow
+
+- name: configure logstash
+  template: src=etc/logstash/conf.d/01-logstash-initial.conf.j2 dest=/etc/logstash/conf.d/01-logstash-initial.conf  owner=root group=root mode=0644
+  template: src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'etc/logstash/conf.d/01-logstash-initial.conf.j2',  dest: '/etc/logstash/conf.d/01-logstash-initial.conf',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'etc/logstash/conf.d/02-netflow.conf.j2',           dest: '/etc/logstash/conf.d/02-netflow.conf',            group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart logstash
+
+- name: start logstash
+  service: name=logstash  state=started  enabled=yes

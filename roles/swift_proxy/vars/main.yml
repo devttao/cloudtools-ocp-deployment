@@ -1,0 +1,4 @@
+---
+swift_mgmt_address: '{{ hostvars[ansible_hostname]["ansible_" + swift_mgmt_interface ]["ipv4"]["address"] }}'
+swift_replicate_address: '{{ hostvars[ansible_hostname]["ansible_" + swift_replicate_interface ]["ipv4"]["address"] }}'
+#swift_replicate_address: '{{ hostvars[ansible_hostname]["ansible_eth1.840"]["ipv4"]["address"] }}'

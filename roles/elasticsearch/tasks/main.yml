@@ -1,0 +1,29 @@
+---
+- name: Install elasticsearch
+  yum: name={{ item }} state=present
+  with_items:
+    - java-1.7.0-openjdk
+    - elasticsearch-1.7.1
+
+- name: configure elasticsearch
+  template: src=etc/sysconfig/elasticsearch.j2 dest=/etc/sysconfig/elasticsearch  owner=root group=root mode=0644
+  notify: restart elasticsearch
+
+- name: configure elasticsearch
+  template: src=etc/elasticsearch/elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml  owner=root group=root mode=0644
+  notify: restart elasticsearch
+
+- name: start elasticsearch
+  service: name=elasticsearch  state=started  enabled=yes
+
+- name: install plugin head
+  shell: /usr/share/elasticsearch/bin/plugin -install mobz/elasticsearch-head
+  ignore_errors: True
+
+- name: install plugin head
+  shell: /usr/share/elasticsearch/bin/plugin -install lmenezes/elasticsearch-kopf
+  ignore_errors: True
+
+- name: install plugin bigdesk
+  shell: /usr/share/elasticsearch/bin/plugin -install lukas-vlcek/bigdesk
+  ignore_errors: True

@@ -1,0 +1,140 @@
+# Hosts
+ci91hf8ctr001    ansible_ssh_host=10.224.243.115  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf8ctr002    ansible_ssh_host=10.224.243.114  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf8ctr003    ansible_ssh_host=10.224.243.113  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf8cmp001    ansible_ssh_host=10.224.243.112  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ 
+[all:vars]
+####################
+# Common
+####################
+ 
+# Domain Name
+domainname = qa.webex.com
+ 
+# DNS Name
+dnsname1 = 10.224.160.14
+dnsname2 = 10.224.30.4
+ 
+# NTP
+ntp_server = 10.224.241.129
+ 
+# log verbose
+verbose = True
+ 
+# log debug
+debug = True
+
+ocp_repo_path = etc/yum.repos.d/ocp.repo
+####################
+# MySQL
+####################
+db_root_password               = pass
+mysql_vip                      = 10.224.243.115
+mysql_vip_port                 = 3306
+management_network             = 10.224.%.%
+ 
+############
+# RabbitMQ #
+############
+rabbitmq_vip                   = 10.224.243.115
+rabbitmq_vip_port              = 5672
+rabbit_ha_queues               = True
+rabbitmq_user                  = openstack
+rabbitmq_password              = pass
+ 
+############
+# Keystone #
+############
+keystone_mysql_password        = pass
+keystone_admin_token           = 720bcf2394ef11bc8673
+keystone_admin_password        = pass
+keystone_admin_email           = zhenggu@cisco.com
+keystone_admin_url_vip         = 10.224.243.115
+keystone_admin_url_port        = 35357
+keystone_admin_url_protocol    = http
+keystone_service_url_vip       = 10.224.243.115
+keystone_service_url_port      = 5000
+keystone_service_url_protocol  = https
+ 
+############
+#  Glance  #
+############
+glance_mysql_password          = pass
+glance_admin_password          = pass
+glance_admin_email             = zhenggu@cisco.com
+glance_service_url_vip         = 10.224.243.115
+glance_service_url_port        = 9292
+glance_service_url_protocol    = http
+glance_registry_url_vip        = 10.224.243.115
+glance_registry_url_port       = 9191
+glance_registry_url_protocol   = https
+glance_image_nfs               = 10.224.240.244:/vol/1
+ 
+############
+#   Nova   #
+############
+nova_mysql_password            = pass
+nova_admin_password            = pass
+nova_admin_email               = zhenggu@cisco.com
+nova_service_url_vip           = 10.224.243.115
+nova_service_url_port          = 8774
+nova_service_url_protocol      = http
+nova_vnc_vip                   = 10.224.243.115
+nova_vnc_port                  = 6080
+nova_vnc_protocol              = https
+nova_metadata_ip               = 10.224.243.115
+nova_metadata_port             = 8775
+nova_instance_nfs              = 10.224.240.244:/vol/2
+ 
+# Modify this to kvm in phy
+virt_type                      = kvm
+ 
+############
+#  Neutron #
+############
+neutron_mysql_password          = pass
+neutron_admin_password          = pass
+neutron_admin_email             = zhenggu@cisco.com
+neutron_service_url_vip         = 10.224.243.115
+neutron_service_url_port        = 9696
+neutron_service_url_protocol    = http
+type_drivers                    = vlan
+tenant_network_types            = vlan
+network_vlan_ranges             = physnet1:1000:2999
+mechanism_drivers               = openvswitch
+enable_security_group           = True
+firewall_driver                 = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+l2_population                   = False
+interface_driver                = neutron.agent.linux.interface.OVSInterfaceDriver
+use_namespaces                  = True
+metadata_proxy_shared_secret    = 720bcf2394ef11bc8673
+ 
+############
+#  Horizon #
+############
+horizon_vip                     = 10.224.243.115
+horizon_vport                   = 80
+ALLOWED_HOSTS                   = ['10.224.243.115']
+ 
+[controller]
+ci91hf8ctr001
+ci91hf8ctr002
+ci91hf8ctr003
+ 
+[controller1]
+ci91hf8ctr001
+ 
+[controller2]
+ci91hf8ctr002
+ 
+[controller3]
+ci91hf8ctr003
+ 
+[network]
+ci91hf8ctr001
+ci91hf8ctr002
+ci91hf8ctr003
+ 
+[compute]
+ci91hf8cmp001

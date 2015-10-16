@@ -1,0 +1,79 @@
+{
+  "network": {
+    "servers": [ "ocpelk.qa.webex.com:5000" ],
+
+    "ssl ca": "/etc/pki/tls/certs/logstash-forwarder.crt",
+
+    "timeout": 15
+  },
+
+  "files": [
+    {
+      "paths": [
+        "/var/log/messages",
+        "/var/log/secure"
+      ],
+
+      "fields": { "type": "syslog" }
+    },
+    {
+      "paths": [
+        "/var/log/nova/nova-cert.log",
+        "/var/log/nova/nova-conductor.log",
+        "/var/log/nova/nova-consoleauth.log",
+        "/var/log/nova/nova-manage.log",
+        "/var/log/nova/nova-novncproxy.log",
+        "/var/log/nova/nova-scheduler.log",
+        "/var/log/nova/nova-compute.log"
+      ],
+      "fields": { "type": "nova" , "tags": "nova,oslofmt"}
+    },
+    {
+      "paths": [
+        "/var/log/nova/nova-api.log"
+      ],
+      "fields": { "type": "nova" , "tags": "nova,oslofmt,novaapi,novametaapi"}
+    },
+    {
+      "paths": [
+        "/var/log/glance/registry.log"
+      ],
+      "fields": { "type": "glance" , "tags": "glance,oslofmt"}
+    },  
+    { 
+      "paths": [
+        "/var/log/glance/api.log"
+      ],
+      "fields": { "type": "glance" , "tags": "glance,oslofmt,glanceapi"}
+    },
+    {
+      "paths": [
+        "/var/log/neutron/dhcp-agent.log",
+        "/var/log/neutron/l3-agent.log",
+        "/var/log/neutron/openvswitch-agent.log",
+        "/var/log/neutron/dhcp-agent.log",
+        "/var/log/neutron/metadata-agent.log"
+      ],
+      "fields": { "type": "neutron" , "tags": "neutron,oslofmt"}
+    },  
+    {
+      "paths": [
+        "/var/log/neutron/server.log"
+      ],
+      "fields": { "type": "neutron" , "tags": "neutron,oslofmt,neutronapi"}
+    },  
+    {
+      "paths": [
+        "/var/log/keystone/keystone.log"
+      ],
+      "fields": { "type": "keystone" , "tags": "keystone,oslofmt,keystoneapi"}
+    },
+    {
+      "paths": [
+        "/var/log/httpd/access_log",
+        "/var/log/httpd/error_log"
+      ],
+      "fields": { "type": "horizon" , "tags": "horizon"}
+    } 
+  ]
+}

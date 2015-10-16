@@ -1,0 +1,59 @@
+---
+# This playbook deploys the whole application stack in this site.  
+
+# Apply common configuration to all hosts
+- hosts: all
+  roles:
+  - common_vm
+  - common
+
+# Build LoadBalance for Openstack
+- hosts: haproxy
+  roles:
+  - haproxy
+
+# Install Controller Nodes
+- hosts: controller1
+  roles:
+  - keystone
+  - keystone_db_init
+  - glance
+  - nova_controller
+  - neutron_controller
+  - horizon
+
+- hosts: controller2
+  roles:
+  - keystone
+  - glance
+  - nova_controller
+  - neutron_controller
+  - horizon
+
+- hosts: controller3
+  roles:
+  - keystone
+  - glance
+  - nova_controller
+  - neutron_controller
+  - horizon
+
+# Install Network Nodes
+- hosts: network
+  roles:
+  - neutron_network
+
+# Install Compute Nodes
+- hosts: compute
+  roles:
+  - nova_compute
+  - neutron_compute
+
+# Patch
+- hosts: controller
+  roles:
+  - patch_controller
+
+- hosts: compute
+  roles:
+  - patch_compute

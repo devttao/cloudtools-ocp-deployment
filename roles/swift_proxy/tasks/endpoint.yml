@@ -1,0 +1,33 @@
+---
+# Create swift user ,service
+
+- name: create swift user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: swift
+    password: "{{ swift_admin_password }}"
+    email: "{{ swift_admin_email }}"
+    tenant: services
+    state: present
+
+- name: Associate role admin with swift
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: swift
+    tenant: services
+    role: admin
+    state: present
+
+- name: Create swift endpoint
+  keystone_service:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    name: swift
+    type: object-store
+    region: regionOne
+    description: "Openstack Object Storage"
+    public_url: "{{ swift_service_url_protocol }}://{{ swift_service_url_vip }}:{{ swift_service_url_port }}/v1/AUTH_%(tenant_id)s"
+    internal_url: "{{ swift_service_url_protocol }}://{{ swift_service_url_vip }}:{{ swift_service_url_port }}/v1/AUTH_%(tenant_id)s"
+    admin_url: "{{ swift_service_url_protocol }}://{{ swift_service_url_vip }}:{{ swift_service_url_port }}"

@@ -1,0 +1,23 @@
+[juno-all]
+name=Local Cache for Juno
+baseurl=http://10.224.147.160/juno-all/
+enabled=1
+skip_if_unavailable=0
+gpgcheck=0
+priority=1
+
+[patch]
+name=Local Cache for patch
+baseurl=http://10.224.147.160/patch/
+enabled=1
+skip_if_unavailable=0
+gpgcheck=0
+priority=1
+
+[ceph]
+name=Local Cache for ceph
+baseurl=http://10.224.147.160/ceph/
+enabled=1
+skip_if_unavailable=0
+gpgcheck=0
+priority=1

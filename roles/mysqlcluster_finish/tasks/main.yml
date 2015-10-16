@@ -1,0 +1,21 @@
+---
+# This role will join MySQL galera cluster
+- name: Stop Mysql Service
+  service: name=mariadb state=stopped enabled=true
+
+- name: Create Mysql galera configuration file
+  template: src=etc/my.cnf.d/galera.cnf.finish.j2 dest=/etc/my.cnf.d/galera.cnf
+  notify: restart mariadb
+
+- name: create mariadb.service.d dir
+  file: name=/etc/systemd/system/mariadb.service.d state=directory owner=root group=root mode=755
+
+- name: create limits.conf
+  copy: src=etc/systemd/system/mariadb.service.d/limits.conf dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=644
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Start Mysql Service
+  service: name=mariadb state=started enabled=true
+

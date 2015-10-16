@@ -1,0 +1,63 @@
+---
+- hosts: all
+  tasks:
+  - name: Build hosts file
+    lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth0.ipv4.address }} {{ item }}.{{ domainname }} {{ item }}" state=present
+    when: hostvars[item].ansible_eth0.ipv4.address is defined
+    with_items: groups['all']
+
+# if elasticsearch is vm, we need common_vm
+- hosts: elasticsearch
+  roles:
+  - common_vm
+  - common
+
+- hosts: logstash
+  roles:
+  - common_vm
+  - common
+
+- hosts: kibana
+  roles:
+  - common_vm
+  - common
+
+- hosts: elasticsearch
+  roles:
+  - elasticsearch
+
+- hosts: logstash
+  roles:
+  - logstash
+
+- hosts: kibana
+  roles:
+  - kibana
+
+- hosts: controller
+  roles:
+  - logstash-forwarder
+  tasks:
+  - name: clear netflow
+    shell: ovs-vsctl clear Bridge br-int netflow
+  - name: set netflow
+    shell: ovs-vsctl -- set Bridge br-int netflow=@nf -- --id=@nf create NetFlow targets=\"{{ hostvars[groups['logstash'][0]]['ansible_eth0']['ipv4']['address'] }}:2055\" active-timeout=30
+
+- hosts: network
+  roles:
+  - logstash-forwarder
+  tasks:
+  - name: clear netflow
+    shell: ovs-vsctl clear Bridge br-int netflow
+  - name: set netflow
+    shell: ovs-vsctl -- set Bridge br-int netflow=@nf -- --id=@nf create NetFlow targets=\"{{ hostvars[groups['logstash'][0]]['ansible_eth0']['ipv4']['address'] }}:2055\" active-timeout=30
+
+- hosts: compute
+  roles:
+  - logstash-forwarder
+  tasks:
+  - name: clear netflow
+    shell: ovs-vsctl clear Bridge br-int netflow
+  - name: set netflow
+    shell: ovs-vsctl -- set Bridge br-int netflow=@nf -- --id=@nf create NetFlow targets=\"{{ hostvars[groups['logstash'][0]]['ansible_eth0']['ipv4']['address'] }}:2055\" active-timeout=30
+

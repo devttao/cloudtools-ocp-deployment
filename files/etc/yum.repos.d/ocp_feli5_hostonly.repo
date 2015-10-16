@@ -1,0 +1,7 @@
+[ocp]
+name=OCP packages
+baseurl=http://192.168.56.110/repo
+enabled=1
+skip_if_unavailable=0
+gpgcheck=0
+priority=1

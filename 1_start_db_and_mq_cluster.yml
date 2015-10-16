@@ -1,0 +1,47 @@
+---
+###################################################
+# Note: this playbook should ONLY run once
+# TODO: Tunning Mysql cluster and Rabbitmq Cluster
+# TODO: Restart cluster is not the same action 
+#       with start cluster, if we can support both
+#       in role, it will be better
+###################################################
+
+- hosts: controller1
+  roles:
+  - mysql
+  - mysqlcluster_init
+
+- hosts: controller2
+  roles:
+  - mysql
+  - mysqlcluster_join
+
+- hosts: controller3
+  roles:
+  - mysql
+  - mysqlcluster_join
+
+- hosts: controller1
+  roles:
+  - mysqlcluster_finish
+
+- hosts: controller2
+  roles:
+  - mysqlcluster_finish
+
+- hosts: controller3
+  roles:
+  - mysqlcluster_finish
+
+- hosts: controller1
+  roles:
+  - rabbitmqcluster
+
+- hosts: controller2
+  roles:
+  - rabbitmqcluster
+
+- hosts: controller3
+  roles:
+  - rabbitmqcluster

@@ -1,0 +1,11 @@
+---
+# This role will init MySQL galera cluster
+- name: Stop Mysql Service
+  service: name=mariadb state=stopped enabled=true
+
+- name: Create Mysql galera configuration file
+  template: src=etc/my.cnf.d/galera.cnf.init.j2 dest=/etc/my.cnf.d/galera.cnf
+  notify: restart mariadb
+
+- name: Start Mysql Service
+  service: name=mariadb state=started enabled=true

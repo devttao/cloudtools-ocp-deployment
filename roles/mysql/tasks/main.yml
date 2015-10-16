@@ -1,0 +1,41 @@
+---
+# This role will install MySQL and create db user and give permissions.
+
+- name: Install Mysql package
+  yum: name={{ item }} state=present
+  with_items:
+    - mariadb
+    - mariadb-galera-server
+    - MySQL-python
+
+- name: create mariadb.service.d dir
+  file: name=/etc/systemd/system/mariadb.service.d state=directory owner=root group=root mode=755
+
+- name: create limits.conf
+  copy: src=etc/systemd/system/mariadb.service.d/limits.conf dest=/etc/systemd/system/mariadb.service.d/limits.conf owner=root group=root mode=644
+  notify: reload systemd
+
+- name: Create Mysql configuration file
+  copy: src=etc/my.cnf dest=/etc/my.cnf
+  notify: restart mariadb
+
+- name: Start Mysql Service
+  service: name=mariadb state=started enabled=true
+
+- name: Config Mysql Root User
+  mysql_user: name=root password={{ db_root_password }} host={{ item }} priv=*.*:ALL,GRANT state=present
+  with_items:
+    - "{{ management_network }}"
+    - "{{ mysql_vip }}"
+    - "%"
+    - localhost
+
+- name: Copy .my.cnf file with root password credentials
+  template: src=templates/root/my.cnf  dest=/root/.my.cnf  owner=root  group=root  mode=0640
+  notify: restart mariadb
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name=''  host=$item  state=absent
+  with_items:
+    - "{{ inventory_hostname }}"
+    - localhost

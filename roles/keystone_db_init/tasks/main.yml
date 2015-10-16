@@ -1,0 +1,63 @@
+---
+# This role will initial keystone default user/role/tenant
+
+- name: Wait vip startup
+  wait_for: host={{ keystone_admin_url_vip }} port={{ keystone_admin_url_port }} delay=5
+
+- name: create admin tenant
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    tenant: admin
+    tenant_description: "Admin Tenant"
+    state: present
+
+- name: create admin user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: admin
+    password: "{{ keystone_admin_password }}"
+    email: "{{ keystone_admin_email }}"
+    tenant: admin
+    state: present
+
+- name: create admin role and associate with admin user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: admin
+    tenant: admin
+    role: admin
+    state: present
+
+- name: associate role _member_ with admin user
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    user: admin
+    tenant: admin
+    role: _member_
+    state: present
+
+- name: create service tenant
+  keystone_user:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    tenant: services
+    tenant_description: "Services Tenant"
+    state: present
+  register: service_tenant_id
+
+- name: Create Keystone Endpoint
+  keystone_service:
+    endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+    token: "{{ keystone_admin_token }}"
+    name: keystone
+    type: identity
+    region: regionOne
+    description: "Identity Service"
+    public_url: "{{ keystone_service_url_protocol }}://{{ keystone_service_url_vip }}:{{ keystone_service_url_port }}/v2.0"
+    internal_url: "{{ keystone_service_url_protocol }}://{{ keystone_service_url_vip }}:{{ keystone_service_url_port }}/v2.0"
+    admin_url: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+

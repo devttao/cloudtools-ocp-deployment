@@ -1,0 +1,16 @@
+---
+# This role will install and config haproxy
+
+- name: Install haproxy
+  yum: name=haproxy state=present
+
+#- name: Copy cert
+#  copy: src=haproxy.qa.webex.com.pem  dest=/etc/ssl
+
+- name: Configure haproxy
+  template: src=etc/haproxy/haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg group=haproxy owner=haproxy mode=0644
+  #template: src=etc/haproxy/haproxy.cfg.https.j2  dest=/etc/haproxy/haproxy.cfg group=haproxy owner=haproxy mode=0644
+  notify: restart haproxy
+
+- name: Start haproxy
+  service: name=haproxy  state=started  enabled=yes 

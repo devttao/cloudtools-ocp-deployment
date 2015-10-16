@@ -1,0 +1,9 @@
+---
+# This role is used to deploy and config swift storage service on storage node
+#
+
+- include: packages.yml
+- include: disk.yml
+- include: files.yml
+- include: rsync.yml
+- include: add_rings.yml

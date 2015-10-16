@@ -1,0 +1,12 @@
+---
+- name: restart openstack-swift-proxy
+  service: name=openstack-swift-proxy  state=restarted
+
+- name: restart memcached
+  service: name=memcached  state=restarted
+
+- name: restart openstack-swift-object-expirer
+  service: name=openstack-swift-object-expirer state=restarted
+
+- name: restart rsyncd
+  service: name=rsyncd  state=restarted

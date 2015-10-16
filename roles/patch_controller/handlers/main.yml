@@ -1,0 +1,9 @@
+---
+- name: restart openstack-keystone
+  service: name=openstack-keystone state=restarted
+
+- name: restart neutron-server
+  service: name=neutron-server state=restarted
+
+- name: restart httpd
+  service: name=httpd state=restarted

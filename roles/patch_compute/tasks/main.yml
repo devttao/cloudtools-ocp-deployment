@@ -1,0 +1,29 @@
+---
+# Fix Some bug...
+- name: Fix nova live-migration from 16 cpus server to 8 cpus server
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/lib/python2.7/site-packages/nova/virt/libvirt/driver.py',dest: '/usr/lib/python2.7/site-packages/nova/virt/libvirt/driver.py',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart openstack-nova-compute
+
+# Fix nova bug 1408529
+- name: Fix nova boot vm with an fixed ip failed
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/lib/python2.7/site-packages/nova/network/neutronv2/api.py',dest: '/usr/lib/python2.7/site-packages/nova/network/neutronv2/api.py',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart openstack-nova-compute
+
+# Create dir for systemd controlled services
+- name: Create dir for systemd controlled services
+  file: name=/etc/systemd/system/{{ item }} state=directory owner=root group=root mode=755
+  with_items:
+    - neutron-openvswitch-agent.service.d
+
+# Customize systemd controlled services
+- name: Customize systemd controlled services
+  copy: src=files/etc/systemd/system/{{ item }}/customize.conf dest=/etc/systemd/system/{{ item }}/customize.conf group=root owner=root mode=644
+  with_items:
+    - neutron-openvswitch-agent.service.d
+
+- name: Reload systemd
+  command: systemctl daemon-reload

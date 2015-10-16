@@ -1,0 +1,249 @@
+# Hosts
+ci91hf1ctr001    ansible_ssh_host=10.224.241.139  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1ctr002    ansible_ssh_host=10.224.241.140  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1ctr003    ansible_ssh_host=10.224.241.141  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp001    ansible_ssh_host=10.224.241.142  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp002    ansible_ssh_host=10.224.241.143  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp003    ansible_ssh_host=10.224.241.144  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp004    ansible_ssh_host=10.224.241.145  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp005    ansible_ssh_host=10.224.241.146  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp006    ansible_ssh_host=10.224.241.147  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp007    ansible_ssh_host=10.224.241.148  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp008    ansible_ssh_host=10.224.241.149  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp009    ansible_ssh_host=10.224.241.150  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cmp010	 ansible_ssh_host=10.224.241.151  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+zabbix_server	 ansible_ssh_host=10.224.242.205  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ocpelk           ansible_ssh_host=10.224.242.203  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata          ansible_ssh_host=10.224.242.204  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata2         ansible_ssh_host=10.224.242.206  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata3         ansible_ssh_host=10.224.242.207  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata4         ansible_ssh_host=10.224.242.208  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata5         ansible_ssh_host=10.224.242.209  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata6         ansible_ssh_host=10.224.242.210  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata7         ansible_ssh_host=10.224.242.211  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata8         ansible_ssh_host=10.224.242.214  ansible_connection=ssh  ansible_ssh_user=centos
+elkdata9         ansible_ssh_host=10.224.242.215  ansible_connection=ssh  ansible_ssh_user=centos
+# Swift
+ci91hf1cpr001    ansible_ssh_host=10.224.241.152  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cpr002    ansible_ssh_host=10.224.241.153  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cob001	 ansible_ssh_host=10.224.241.220  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cob002	 ansible_ssh_host=10.224.241.221  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+ci91hf1cob003	 ansible_ssh_host=10.224.241.222  ansible_connection=ssh  ansible_ssh_user=ocpadmin
+
+
+
+[all:vars]
+####################
+# Common
+####################
+
+# Domain Name
+domainname = qa.webex.com
+
+# DNS Name
+dnsname1 = 10.224.91.8
+dnsname2 = 10.224.30.4
+
+# NTP
+ntp_server = 10.224.241.129
+
+# ocp repo
+ocp_repo_path = etc/yum.repos.d/ocp.repo
+
+# log verbose
+verbose = True
+
+# log debug
+debug = True
+
+####################
+# MySQL
+####################
+db_root_password        = openstack356
+mysql_vip               = hf1-ocpdb.qa.webex.com
+mysql_vip_port          = 3306
+management_network      = 10.224.%.%
+
+############
+# RabbitMQ #
+############
+rabbitmq_vip                   = hf1-rmq.qa.webex.com
+rabbitmq_vip_port              = 5672
+rabbit_ha_queues               = True
+rabbitmq_user                  = rabbituser
+rabbitmq_password              = rabbitopenstack356
+
+############
+# Keystone #
+############
+keystone_mysql_password        = keystoneopenstack356
+keystone_admin_token           = openstack356_token
+keystone_admin_password        = openstack356
+keystone_admin_email           = ocp-china@cisco.com
+keystone_admin_url_vip         = hf1-keystone-admin.qa.webex.com
+keystone_admin_url_port        = 443
+keystone_admin_url_protocol    = https
+keystone_service_url_vip       = hf1-keystone-srv.qa.webex.com
+keystone_service_url_port      = 443
+keystone_service_url_protocol  = https
+
+############
+#  Glance  #
+############
+glance_mysql_password          = glanceopenstack356
+glance_admin_password          = glance_service_openstack356
+glance_admin_email             = ocp-china@cisco.com
+glance_service_url_vip         = hf1-glance-api.qa.webex.com
+glance_service_url_port        = 443
+glance_service_url_protocol    = https
+glance_registry_url_vip        = hf1-glance-reg.qa.webex.com
+glance_registry_url_port       = 443
+glance_registry_url_protocol   = https
+glance_image_nfs               = 10.224.238.229:/vol/glance_images
+
+############
+#   Nova   #
+############
+nova_mysql_password            = novaopenstack356
+nova_admin_password            = nova_service_openstack356
+nova_admin_email               = ocp-china@cisco.com
+nova_service_url_vip           = hf1-nova-api.qa.webex.com
+nova_service_url_port          = 443
+nova_service_url_protocol      = https
+nova_vnc_vip                   = hf1-novnc.qa.webex.com
+nova_vnc_port                  = 444
+nova_vnc_protocol              = https
+nova_metadata_ip               = hf1-nova-metadata.qa.webex.com
+nova_metadata_port             = 443
+
+# Modify this to kvm in phy
+virt_type                      = kvm
+
+############
+#  Neutron #
+############
+neutron_mysql_password          = neutronopenstack356
+neutron_admin_password          = neutron_service_openstack356
+neutron_admin_email             = ocp-china@cisco.com
+neutron_service_url_vip         = hf1-neutron.qa.webex.com
+neutron_service_url_port        = 443
+neutron_service_url_protocol    = https
+type_drivers                    = vlan
+tenant_network_types            = vlan
+network_vlan_ranges             = physnet1:841:860
+mechanism_drivers               = openvswitch
+enable_security_group           = True
+firewall_driver                 = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+l2_population                   = False
+interface_driver                = neutron.agent.linux.interface.OVSInterfaceDriver
+use_namespaces                  = True
+metadata_proxy_shared_secret    = sharedkeyopenstack356
+
+
+############
+#  Horizon #
+############
+horizon_vip                     = hf1-dashboard.qa.webex.com
+horizon_vport                   = 443
+ALLOWED_HOSTS                   = ['hf1-dashboard.qa.webex.com']
+
+#############
+### swift
+###############
+swift_admin_password           = swift_service_openstack356
+swift_admin_email              = ocp-china@cisco.com
+swift_service_url_vip          = hf1-swift.qa.webex.com
+swift_service_url_port         = 443
+swift_service_url_protocol     = https
+swift_hash_path_suffix         = swifthashsuffixopenstack356
+swift_hash_path_prefix         = swifthashprefixopenstack356
+swift_manage_disks             = true
+swift_mgmt_interface           = eth0
+swift_replicate_interface      = eth1.840
+
+############
+#  Monitor #
+############
+# server side configuration
+time_zone                       = GMT
+zabbix_mysql_password           = zabbix
+# client side configuration
+zabbix_server                   = 10.224.242.205
+
+[controller]
+ci91hf1ctr001
+ci91hf1ctr002
+ci91hf1ctr003
+
+[controller1]
+ci91hf1ctr001
+
+[controller2]
+ci91hf1ctr002
+
+[controller3]
+ci91hf1ctr003
+
+[network]
+#ci91hf1ctr001    <-- TODO: eth1 has issue, it can not get arp-reply packages
+ci91hf1ctr002
+ci91hf1ctr003
+
+
+[compute:children]
+compute_local
+compute_nfs1
+compute_nfs2
+
+[compute_local]
+
+[compute_nfs1]
+ci91hf1cmp001
+
+[compute_nfs1:vars]
+nova_instance_nfs = 10.224.238.229:/vol/nova_instances
+#nova_instance_nfs = 10.224.242.222:/vol/nova_instance2
+
+[compute_nfs2]
+ci91hf1cmp002
+ci91hf1cmp003
+ci91hf1cmp004
+ci91hf1cmp005
+ci91hf1cmp006
+ci91hf1cmp007
+ci91hf1cmp008
+ci91hf1cmp009
+ci91hf1cmp010
+
+[compute_nfs2:vars]
+nova_instance_nfs = 10.224.238.229:/vol/nova_instances
+
+[monitor]
+zabbix_server
+
+[elasticsearch]
+ocpelk
+elkdata
+elkdata2
+elkdata3
+elkdata4
+elkdata5
+elkdata6
+elkdata7
+elkdata8
+elkdata9
+
+[logstash]
+ocpelk
+
+[kibana]
+ocpelk
+
+[swift_proxy_server]
+ci91hf1cpr001
+ci91hf1cpr002
+
+[swift_storage]
+ci91hf1cob001
+ci91hf1cob002
+ci91hf1cob003

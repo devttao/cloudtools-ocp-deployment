@@ -1,0 +1,22 @@
+---
+- name: check if kibana is already installed
+  stat: path="/opt/kibana-4.1.1-linux-x64/bin/kibana"
+  changed_when: false
+  register: kibana_installed
+
+- name: get Kibana archive
+  get_url: url=https://download.elastic.co/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz dest=/tmp/kibana-4.1.1.tgz
+  when: kibana_installed.stat.exists == false
+
+- name: untar kibana
+  unarchive: src=/tmp/kibana-4.1.1.tgz dest=/opt/ copy=no
+  when: kibana_installed.stat.exists == false
+
+- name: set Kibana configuration
+  template: src=opt/kibana-4.1.1-linux-x64/config/kibana.yml.j2 dest=/opt/kibana-4.1.1-linux-x64/config/kibana.yml mode=0644
+
+- name: add Kibana systemd configuration
+  template: src='lib/systemd/system/kibana.service.j2' dest='/lib/systemd/system/kibana.service' owner=root group=root mode=0640
+
+- name: start kibana 
+  service: name=kibana  state=started  enabled=yes

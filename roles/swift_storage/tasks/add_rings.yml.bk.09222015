@@ -1,0 +1,44 @@
+---
+# add dev to ring
+
+#- name: check if account.ring.gz already exists
+#  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+#  command: ls /etc/swift/account.ring.gz
+#  register: rings_exist
+#  ignore_errors: true
+#  changed_when: rings_exist.rc > 0
+  
+#- debug: msg= "{{ rings_exist.rc }}"
+
+- name: build account ring
+  command: swift-ring-builder account.builder add r{{ item[0] }}z{{ item[1] }}-{{ ansible_eth0.ipv4.address }}:6002/{{ item[2] }}1 100
+           chdir=/etc/swift
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  ignore_errors: true
+  with_nested:
+    - "{{ region }}"
+    - "{{ zone }}"
+    - "{{ disks }}"
+#  when: rings_exist.rc > 0
+
+- name: build container ring
+  command: swift-ring-builder container.builder add r{{ item[0] }}z{{ item[1] }}-{{ ansible_eth0.ipv4.address }}:6001/{{ item[2] }}1 100
+           chdir=/etc/swift
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  ignore_errors: true
+  with_nested:
+    - "{{ region }}"
+    - "{{ zone }}"
+    - "{{ disks }}"
+#  when: rings_exist.rc > 0
+
+- name: build object ring
+  command: swift-ring-builder object.builder add r{{ item[0] }}z{{ item[1] }}-{{ ansible_eth0.ipv4.address }}:6000/{{ item[2] }}1 100
+           chdir=/etc/swift
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  ignore_errors: true
+  with_nested:
+    - "{{ region }}"
+    - "{{ zone }}"
+    - "{{ disks }}"
+#  when: rings_exist.rc > 0

@@ -1,0 +1,49 @@
+---
+# This role is used to deploy and config nova service on compute node
+
+- name: Install nova-compute packages
+  yum: name={{ item }} state=present
+  with_items:
+   - openstack-nova-compute
+   - sysfsutils
+
+- name: Configure nova config
+  template: src=etc/nova/nova.conf.compute.j2 dest=/etc/nova/nova.conf owner=nova group=nova mode=0640
+  notify: restart openstack-nova-compute
+
+- name: Configure libvirtd
+  copy: src=etc/libvirt/libvirtd.conf dest=/etc/libvirt/libvirtd.conf
+
+- name: Configure libvirtd sysconfig
+  copy: src=etc/sysconfig/libvirtd dest=/etc/sysconfig/libvirtd
+
+- name: Start libvirtd
+  service: name=libvirtd  state=started  enabled=yes
+
+- name: Start messagebus
+  service: name=messagebus  state=started  enabled=yes
+
+- name: Start nova-compute
+  service: name=openstack-nova-compute  state=started  enabled=yes
+
+- name: configure nova bash
+  shell: usermod -s /bin/bash nova
+
+- name: configure nova .ssh
+  file: path=/var/lib/nova/.ssh state=directory mode=0700 owner=nova group=nova
+
+- name: configure nova ssh config
+  copy: src=var/lib/nova/ssh/config dest=/var/lib/nova/.ssh/config mode=0644 owner=nova group=nova
+
+- name: configure nova ssh id_rsa
+  copy: src=var/lib/nova/ssh/id_rsa dest=/var/lib/nova/.ssh/id_rsa mode=0600 owner=nova group=nova
+
+- name: configure nova ssh authorized_keys
+  copy: src=var/lib/nova/ssh/authorized_keys dest=/var/lib/nova/.ssh/authorized_keys mode=0600 owner=nova group=nova
+
+- name: Mount /var/lib/nova/instances
+  mount: name=/var/lib/nova/instances src={{ nova_instance_nfs }} fstype=nfs opts="rw,bg,nointr,rsize=32768,wsize=32768,tcp,actimeo=0,vers=3,timeo=600,nolock" state=mounted
+  when: nova_instance_nfs is defined
+
+- name: Change dir owner
+  file: name=/var/lib/nova/instances state=directory owner=nova group=nova

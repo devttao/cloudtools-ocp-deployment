@@ -1,0 +1,24 @@
+---
+# This role will install and configure zabbix agent
+# Install zabbix agent
+- name: Install zabbix agent
+  yum: name=zabbix-agent state=present
+
+- name: Copy zabbix_agentd.conf
+  template: src=templates/etc/zabbix/zabbix_agentd.conf.j2 dest=/etc/zabbix/zabbix_agentd.conf owner=root group=root mode=0640
+
+# zabbix's auto registration need these information
+- name: Substitute HostMetadata
+  shell: HostMetadataReal=$(grep -E "^HostMetadata" /tmp/zabbix_agent.ansible); sed -i "s/^HostMetadata=.*/${HostMetadataReal}/g" /etc/zabbix/zabbix_agentd.conf 
+
+- name: Copy UserParameter for mysql
+  shell: rm -f /etc/zabbix/zabbix_agentd.d/*
+
+- name: Copy UserParameter for mysql
+  copy: src=files/etc/zabbix/zabbix_agentd.d/userparameter_mysql.conf dest=/etc/zabbix/zabbix_agentd.d/userparameter_mysql.conf owner=root group=root mode=0640
+
+- name: Copy UserParameter for rabbitmq
+  copy: src=files/etc/zabbix/zabbix_agentd.d/userparameter_rabbitmq.conf dest=/etc/zabbix/zabbix_agentd.d/userparameter_rabbitmq.conf owner=root group=root mode=0640
+
+- name: Start zabbix-agentd Service
+  service: name=zabbix-agent state=restarted enabled=true

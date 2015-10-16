@@ -1,0 +1,5 @@
+---
+#
+
+- name: ensure /etc/swift permission
+  command: chown -R swift:swift /etc/swift

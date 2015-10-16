@@ -1,0 +1,27 @@
+---
+# Directory and files
+
+- name: ensure /etc/swift exists
+  file: path=/etc/swift owner=swift group=swift mode=0750 state=directory
+
+- name: Configure swift.conf file
+  template: src=etc/swift/swift.conf.j2 dest=/etc/swift/swift.conf owner=swift group=swift mode=0600
+
+- name: ensure permissions on /var/cache/swift
+  file: path=/var/cache/swift state=directory group=swift owner=swift mode=0700
+ 
+- name: Configure memcached
+  file: path=etc/sysconfig/memcached.j2 dest=/etc/sysconfig/memcached
+  notify:
+   - restart memcached
+   
+- name: Configure proxy-server.conf 
+  template: src=etc/swift/proxy-server.conf.j2 dest=/etc/swift/proxy-server.conf owner=swift group=swift mode=0640
+  notify:
+   - restart openstack-swift-proxy
+   - restart memcached
+
+- name: Configure object-expirer.conf
+  template: src=etc/swift/object-expirer.conf.j2 dest=/etc/swift/object-expirer.conf owner=swift group=swift mode=0640
+  notify:
+   - restart openstack-swift-object-expirer

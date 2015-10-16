@@ -1,0 +1,11 @@
+---
+# Start service
+#
+- name: Start rsyncd
+  service: name=rsyncd  state=started  enabled=yes
+
+- name: start openstack-swift-proxy
+  service: name=openstack-swift-proxy  state=started  enabled=yes 
+
+- name: start memcached
+  service: name=memcached  state=started  enabled=yes

@@ -1,0 +1,19 @@
+---
+- name: Install ELK
+  yum: name={{ item }} state=present
+  with_items:
+    - java-1.7.0-openjdk
+    - logstash-forwarder-0.4.0-1
+
+- name: configure ssl cert
+  copy: src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'etc/pki/tls/private/logstash-forwarder.key.{{ domainname }}',  dest: '/etc/pki/tls/private/logstash-forwarder.key',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'etc/pki/tls/certs/logstash-forwarder.crt.{{ domainname }}',    dest: '/etc/pki/tls/certs/logstash-forwarder.crt',     group: 'root',  owner: 'root',   mode: '0644' }
+
+- name: configure logstash-forwarder
+  template: src=etc/logstash-forwarder.conf.j2 dest=/etc/logstash-forwarder.conf  owner=root group=root mode=0644
+  notify: restart logstash-forwarder
+
+- name: start logstash-forwarder
+  service: name=logstash-forwarder  state=started  enabled=yes

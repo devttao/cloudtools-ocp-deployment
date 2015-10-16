@@ -1,0 +1,21 @@
+---
+# Create ring
+
+- name: check if account.builder already exists
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  command: ls /etc/swift/account.builder
+  register: builder_exist
+  ignore_errors: true
+  changed_when: builder_exist.rc > 0
+
+- debug: msg= "{{ builder_exist.rc }}"
+
+- name: Create ring
+  command: swift-ring-builder {{ item }}.builder create 18 3 1
+           chdir=/etc/swift
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  with_items:
+   - account
+   - container
+   - object
+  when: builder_exist.rc   > 0

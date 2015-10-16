@@ -1,0 +1,24 @@
+# Create disks
+
+- name: partition devices
+  shell: parted -s /dev/{{ item }} mklabel gpt mkpart primary xfs 2048s 100%; mkfs.xfs -f /dev/{{ item }}1 creates=/dev/{{ item }}1
+  when: swift_manage_disks and ansible_devices.{{ item }}.partitions|length == 0
+  with_items: disks
+
+- name: ensure /srv/node exists
+  file: path=/srv/node state=directory
+
+- name: ensure /srv/node/dev mountpoints
+  file: path=/srv/node/{{ item }}1 state=directory
+  with_items: disks
+  when: swift_manage_disks
+
+- name: mount /srv/node/dev
+  mount: name=/srv/node/{{ item }}1 src=/dev/{{ item }}1 fstype=xfs opts="noatime,nodiratime,nobarrier,logbufs=8" state=mounted
+  with_items: disks
+  when: swift_manage_disks
+
+- name: ensure /srv/node/dev permissions
+  file: path=/srv/node/{{ item }}1 owner=swift
+  with_items: disks
+  when: swift_manage_disks

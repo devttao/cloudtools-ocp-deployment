@@ -1,0 +1,49 @@
+---
+# This playbook add OpenStack Nodes in this site.  
+
+# Apply common configuration to all hosts
+- hosts: all
+  roles:
+  - common
+
+- hosts: controller1
+  tasks:
+  - name: get service tenant
+    keystone_user:
+      endpoint: "{{ keystone_admin_url_protocol }}://{{ keystone_admin_url_vip }}:{{ keystone_admin_url_port }}/v2.0"
+      token: "{{ keystone_admin_token }}"
+      tenant: services
+      tenant_description: "Services Tenant"
+      state: present
+    register: service_tenant_id
+
+# Install Controller Nodes
+# Not supported
+# TBD
+#- hosts: haproxy
+#  roles:
+#  - haproxy
+#- hosts: controller
+#  roles:
+#  - keystone
+#  - glance
+#  - nova_controller
+#  - neutron_controller
+#  - horizon
+
+# Install Network Nodes
+#- hosts: network
+#  roles:
+#  - neutron_network
+
+# Install Compute Nodes
+- hosts: compute
+  roles:
+  - nova_compute
+  - neutron_compute
+  - patch_compute
+
+# Patch
+#- hosts: controller
+#  roles:
+#  - patch

@@ -1,0 +1,38 @@
+---
+# This role will install and config keystone
+
+- name: Create keystone DB
+  mysql_db: name=keystone state=present
+
+- name: Create keystone DB User 
+  mysql_user: host={{ item }} name=keystone  password={{ keystone_mysql_password }} priv=keystone.*:ALL,GRANT state=present
+  with_items:
+    - "{{ mysql_vip }}"
+    - "{{ inventory_hostname }}"
+    - "{{ management_network }}"
+    - localhost
+
+- name: Install keystone and keystone client package
+  yum: name={{ item }} state=present
+  with_items:
+   - openstack-keystone
+   - python-keystoneclient
+
+- name: Configure keystone
+  template: src=etc/keystone/keystone.conf.j2 dest=/etc/keystone/keystone.conf owner=keystone group=keystone mode=0640
+  notify: restart openstack-keystone
+
+- name: Keystone DB sync
+  command: /usr/bin/keystone-manage db_sync
+
+- name: Keystone log file
+  file: path=/var/log/keystone/keystone.log group=keystone owner=keystone 
+
+- name: Start keytone
+  service: name=openstack-keystone  state=started  enabled=yes 
+
+- name: Wait keystone startup
+  wait_for: port=35357  timeout=30
+
+- name: Delete keystone token periodically
+  cron: name="keystone" user=keystone  special_time=hourly job="date >> /var/log/keystone/keystone-tokenflush.log; /usr/bin/keystone-manage token_flush >>/var/log/keystone/keystone-tokenflush.log 2>&1; date >> /var/log/keystone/keystone-tokenflush.log"  state=present

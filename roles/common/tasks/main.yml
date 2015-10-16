@@ -1,0 +1,88 @@
+---
+# TODO: This role can be done in cobbler!!
+# This role contains common plays that will run on all nodes.
+- name: Restore umask
+  copy: src=etc/profile.d/umask.sh dest=/etc/profile.d/umask.sh group=root owner=root mode=644
+
+- name: Delete kernel.exec-shield to prevent from deploying error
+  sysctl: name=kernel.exec-shield state=absent
+
+- name: Clean up repo cache
+  shell: yum clean all 
+
+# Disable NetworkManager
+- name: Disable NetworkManager
+  service: name=NetworkManager state=stopped enabled=false
+
+# Disable Firewalld
+- name: Disable Firewalld
+  service: name=firewalld state=stopped enabled=false
+
+# Disable SELinux
+- name: Disable SELinux by command
+  shell: /usr/sbin/setenforce 0
+  ignore_errors: True
+
+- name: Disable SELinux in config
+  selinux: state=disabled
+
+# NTP
+- name: Install ntp 
+  yum: name=ntp state=present
+
+- name: Configure ntp file
+  template: src=etc/ntp.conf.j2 dest=/etc/ntp.conf
+  notify: restart ntp
+
+# Create dir for ntpd services
+- name: Create dir for ntpd service
+  file: name=/etc/systemd/system/ntpd.service.d state=directory owner=root group=root mode=755
+
+- name:  Customize ntpd service
+  copy: src=etc/systemd/system/ntpd.service.d/customize.conf dest=/etc/systemd/system/ntpd.service.d/customize.conf group=root owner=root mode=644
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Stop the ntp service
+  service: name=ntpd state=stopped enabled=true
+
+- name: Sync time
+  shell: ntpdate {{ ntp_server }}
+
+- name: Set the Hardware Clock to the current System Time
+  command: clock -w
+
+- name: Start the ntp service
+  service: name=ntpd state=started enabled=true
+
+# Tunning TCP keepalive
+- name: Config sysctl net.ipv4.tcp_keepalive_intvl
+  sysctl: name=net.ipv4.tcp_keepalive_intvl value=1 state=present
+
+- name: Config sysctl net.ipv4.tcp_keepalive_time
+  sysctl: name=net.ipv4.tcp_keepalive_time value=30 state=present
+
+- name: Config sysctl net.ipv4.tcp_keepalive_probes
+  sysctl: name=net.ipv4.tcp_keepalive_probes value=5 state=present
+
+# DNS
+- name: Confiture dns server
+  template: src=etc/resolv.conf.j2 dest=/etc/resolv.conf
+
+# Install common packages
+- name: Install some tools
+  yum: name={{ item }} state=present
+  with_items:
+    - net-tools
+    - vim
+    - htop
+    - psmisc
+    - MySQL-python
+    - kexec-tools
+    - wget
+    - lrzsz
+    - rsync
+    - tcpdump
+    - cronie
+    - nfs-utils

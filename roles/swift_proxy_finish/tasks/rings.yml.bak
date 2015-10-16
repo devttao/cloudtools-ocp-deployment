@@ -1,0 +1,22 @@
+---
+# rebalance rings
+
+- name: rebalance rings
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  command: swift-ring-builder {{ item }}.builder rebalance
+           chdir=/etc/swift 
+  register: rebalance
+  ignore_errors: true
+  with_items:
+    - account
+    - object
+    - container
+
+- name: distribute swift rings
+  delegate_to: "{{ groups['swift_proxy_server'][0] }}"
+  fetch: dest=fetch/{{ item }}.ring.gz flat=yes src=/etc/swift/{{ item }}.ring.gz
+  when: rebalance.changed
+  with_items:
+    - account
+    - object
+    - container

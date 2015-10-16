@@ -1,0 +1,31 @@
+---
+# This playbook deploys the whole application stack in this site.  
+
+# Apply common configuration to all hosts
+- hosts: 
+  - swift_proxy_server
+  - swift_storage
+  roles:
+  - common
+
+# Install Controller Nodes
+- hosts: swift_proxy_server
+  serial: 1
+  roles:
+  - swift_proxy
+
+# Install storage node
+- hosts: swift_storage
+  serial: 1
+  roles:
+  - swift_storage
+
+- hosts: swift_proxy_server
+  serial: 1
+  roles:
+  - swift_proxy_finish
+
+- hosts: swift_storage
+  serial: 1
+  roles:
+  - swift_storage_finish

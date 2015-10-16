@@ -1,0 +1,74 @@
+---
+# Fix Some bug...
+# TODO: This should be managed by bug
+
+# Keystone bug when we enable LB HTTPS
+# https://bugs.launchpad.net/keystone/+bug/1370022
+- name: Fix keystone bug 1370022
+  copy: src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/lib/python2.7/site-packages/keystone/common/config.py',  dest: '/usr/lib/python2.7/site-packages/keystone/common/config.py',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'patch/usr/lib/python2.7/site-packages/keystone/common/wsgi.py',    dest: '/usr/lib/python2.7/site-packages/keystone/common/wsgi.py',     group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart openstack-keystone
+
+- name: Fix neutron bug 1399249
+  copy: src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/lib/python2.7/site-packages/neutron/plugins/ml2/plugin.py',dest: '/usr/lib/python2.7/site-packages/neutron/plugins/ml2/plugin.py',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart neutron-server
+
+- name: Fix horizon bug 1404471
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/loadbalancers/workflows.py',dest: '/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/loadbalancers/workflows.py',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'patch/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/instances/views.py',dest: '/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/instances/views.py',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'patch/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/instances/templates/instances/_instance_flavor.html',dest: '/usr/share/openstack-dashboard/openstack_dashboard/dashboards/project/instances/templates/instances/_instance_flavor.html',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart httpd
+
+- name: Fix horizon bug 1349841
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/share/openstack-dashboard/openstack_dashboard/api/neutron.py',dest: '/usr/share/openstack-dashboard/openstack_dashboard/api/neutron.py',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart httpd
+
+- name: Patch OCP logo
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/usr/share/openstack-dashboard/static/dashboard/img/logo.png',dest: '/usr/share/openstack-dashboard/static/dashboard/img/logo.png',   group: 'root',  owner: 'root',   mode: '0644' }
+    - { src: 'patch/usr/share/openstack-dashboard/static/dashboard/img/logo-splash.png',dest: '/usr/share/openstack-dashboard/static/dashboard/img/logo-splash.png',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart httpd
+
+- name: Patch Redirect / to /dashboard
+  copy:  src={{ item.src }} dest={{ item.dest }} group={{ item.group }} owner={{ item.owner }} mode={{ item.mode }}
+  with_items:
+    - { src: 'patch/etc/httpd/conf.d/welcome.conf',dest: '/etc/httpd/conf.d/welcome.conf',   group: 'root',  owner: 'root',   mode: '0644' }
+  notify: restart httpd
+
+# Create dir for systemd controlled services
+- name: Create dir for systemd controlled services
+  file: name=/etc/systemd/system/{{ item }} state=directory owner=root group=root mode=755
+  with_items:
+    - memcached.service.d
+    - neutron-dhcp-agent.service.d
+    - neutron-l3-agent.service.d
+    - neutron-lbaas-agent.service.d
+    - neutron-metadata-agent.service.d
+    - neutron-openvswitch-agent.service.d
+    - neutron-server.service.d
+    - openstack-nova-novncproxy.service.d
+
+# Customize systemd controlled services
+- name: Customize systemd controlled services
+  copy: src=files/etc/systemd/system/{{ item }}/customize.conf dest=/etc/systemd/system/{{ item }}/customize.conf group=root owner=root mode=644
+  with_items:
+    - memcached.service.d
+    - neutron-dhcp-agent.service.d
+    - neutron-l3-agent.service.d
+    - neutron-lbaas-agent.service.d
+    - neutron-metadata-agent.service.d
+    - neutron-openvswitch-agent.service.d
+    - neutron-server.service.d
+    - openstack-nova-novncproxy.service.d
+
+- name: Reload systemd
+  command: systemctl daemon-reload

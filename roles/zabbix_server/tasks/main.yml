@@ -1,0 +1,58 @@
+---
+# This role will install and configure zabbix server
+# Install zabbix server
+- name: Install zabbix-server
+  yum: name={{ item }} state=present
+  with_items:
+    - zabbix-server-mysql
+    - zabbix-web-mysql
+    - mariadb-server
+
+- name: Start Mysql Service
+  service: name=mariadb state=started enabled=true
+
+- name: Config Mysql Root User
+  mysql_user: name=root password={{ db_root_password }} host={{ item }} priv=*.*:ALL,GRANT state=present
+  with_items:
+    - "%"
+    - localhost
+
+- name: Copy .my.cnf file with root password credentials
+  template: src=templates/root/my.cnf  dest=/root/.my.cnf  owner=root  group=root  mode=0640
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name=''  host=$item  state=absent
+  with_items:
+    - "{{ inventory_hostname }}"
+    - localhost
+
+- name: Create zabbix DB
+  mysql_db: name=zabbix state=present
+  register: ret
+
+- name: Create zabbix DB User
+  mysql_user: host={{ item }} name=zabbix  password={{ zabbix_mysql_password }} priv=zabbix.*:ALL,GRANT state=present
+  with_items:
+    - "{{ inventory_hostname }}"
+    - localhost
+
+- name: Initial zabbix DB
+  mysql_db: state=import name=zabbix target=/usr/share/doc/zabbix-server-mysql-2.4.6/create/{{ item }}
+  with_items:
+    - schema.sql
+    - images.sql
+    - data.sql
+  when: ret|changed
+
+- name: Copy zabbix_server.conf
+  template: src=templates/etc/zabbix/zabbix_server.conf.j2 dest=/etc/zabbix/zabbix_server.conf owner=root group=root mode=0640
+
+- name: Start zabbix-server Service
+  service: name=zabbix-server state=restarted enabled=true
+
+- name: Copy httpd/conf.d/zabbix.conf with approriate timezone
+  template: src=templates/etc/httpd/conf.d/zabbix.conf.j2 dest=/etc/httpd/conf.d/zabbix.conf owner=root group=root mode=0644
+
+- name: Start httpd Service
+  service: name=httpd state=restarted enabled=true
+

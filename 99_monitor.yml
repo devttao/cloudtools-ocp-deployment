@@ -1,0 +1,38 @@
+---
+- hosts: all
+  roles:
+  - common
+
+- hosts: monitor
+  roles:
+  - upgrade
+  - zabbix_server
+
+- hosts: all
+  tasks:
+  - name: Copy zabbix-agent.ansible
+    copy: src=files/tmp/zabbix_agent.ansible  dest=/tmp/zabbix_agent.ansible
+
+- hosts: controller
+  tasks:
+  - name: append controller to zabbix-agent.ansible
+    shell: echo -n "controller " >> /tmp/zabbix_agent.ansible
+
+- hosts: compute
+  tasks:
+  - name: append compute to zabbix-agent.ansible
+    shell: echo -n "compute " >> /tmp/zabbix_agent.ansible
+
+- hosts: network
+  tasks:
+  - name: append network to zabbix-agent.ansible
+    shell: echo -n "network " >> /tmp/zabbix_agent.ansible
+
+- hosts: monitor
+  tasks:
+  - name: append monitor to zabbix-agent.ansible
+    shell: echo -n "monitor " >> /tmp/zabbix_agent.ansible
+
+- hosts: all
+  roles:
+  - zabbix_agent
